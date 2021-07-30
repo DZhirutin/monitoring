@@ -1,0 +1,85 @@
+version: '3'
+services:
+  postgresql:
+    image: postgres
+    container_name: postgres
+    ports:
+      - 5400:5432
+    networks:
+      - monitoring
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=telegraf
+    volumes:
+      - ./postgres.conf:/etc/postgresql/postgresql.conf
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    restart: always
+
+  grafana:
+    image: grafana/grafana:6.7.5
+    container_name: grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=alfamonitor
+    ports:
+      - 3000:3000
+    networks:
+      - monitoring
+    volumes:
+      - grafana-volume:/var/lib/grafana
+
+  influxdb:
+    image: influxdb:1.7
+    container_name: influxdb
+    restart: always
+    ports:
+      - 8086:8086
+    networks:
+      - monitoring
+    volumes:
+      - /var/lib/influxdb:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=telegraf
+      - INFLUXDB_ADMIN_USER=telegraf
+      - INFLUXDB_ADMIN_PASSWORD=telegraf
+  chronograf:
+    image: chronograf
+    ports:
+      - 8888:8888
+    networks:
+        - monitoring
+    volumes:
+      - chronograf_volume:/var/lib/chronograf
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_USERNAME=telegraf
+      - INFLUXDB_PASSWORD=telegraf
+  telegraf:
+    image: telegraf
+    container_name: telegraf
+    restart: always
+    networks:
+      - monitoring
+    environment:
+      - HOST_PROC=/rootfs/proc
+      - HOST_SYS=/rootfs/sys
+      - HOST_ETC=/rootfs/etc
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/rootfs/sys:ro
+      - /proc:/rootfs/proc:ro
+      - /etc:/rootfs/etc:ro
+  
+    
+networks:
+  monitoring:
+
+volumes:
+  grafana-volume:
+  chronograf_volume:
