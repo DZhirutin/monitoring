@@ -45,6 +45,7 @@ services:
       - INFLUXDB_DB=telegraf
       - INFLUXDB_ADMIN_USER=telegraf
       - INFLUXDB_ADMIN_PASSWORD=telegraf
+
   chronograf:
     image: chronograf
     ports:
@@ -59,6 +60,7 @@ services:
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_USERNAME=telegraf
       - INFLUXDB_PASSWORD=telegraf
+  
   telegraf:
     image: telegraf
     container_name: telegraf
